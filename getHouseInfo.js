@@ -75,4 +75,30 @@ function postData() {
     xhr.send(JSON.stringify(data));
 }
 
+function nextUrl() {
+    const data = {
+        "url": "https://segmentfault.com/channel/frontend",
+    };
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'http://127.0.0.1:5000/nextUrl', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                console.log('数据发送成功：', xhr.responseText);
+            } else {
+                console.error('数据发送失败，状态码：', xhr.status);
+            }
+        }
+    };
+
+    xhr.send(JSON.stringify(data));
+}
+
 postData();
+
+setTimeout(() => {
+    nextUrl()
+}, 1000)
