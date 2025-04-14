@@ -8,3 +8,4 @@ rows.forEach(row => {
 });
 
 console.log(tableData);
+
