@@ -4,7 +4,7 @@ import csv
 import threading
 from flask_cors import CORS
 from .spider import goToLianJiaPage
-
+import os
 app = Flask(__name__)
 # 允许所有源的请求
 CORS(app)
@@ -17,21 +17,24 @@ def post_data():
         return 'Invalid data', 400
 
     address = data['address']
-    info = data['info']
+    info_list = data['info']  # 假设是一个字典数组
+    if not isinstance(info_list, list) or not all(isinstance(item, dict) for item in info_list):
+        return 'Invalid info format', 400
+
     csv_file = f'{address}.csv'
 
-    # 检查 CSV 文件是否存在，如果不存在则创建
-    try:
-        with open(csv_file, 'x', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=info.keys())
-            writer.writeheader()
-    except FileExistsError:
-        pass
-
-    # 将数据写入 CSV 文件
+    # 如果文件不存在，创建并写入表头
+    file_exists = os.path.exists(csv_file)
     with open(csv_file, 'a', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=info.keys())
-        writer.writerow(info)
+        # 用第一个字典的 key 作为表头
+        fieldnames = info_list[0].keys()
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        if not file_exists:
+            writer.writeheader()
+
+        for info in info_list:
+            writer.writerow(info)
 
     return 'Data saved successfully', 200
 

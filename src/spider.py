@@ -3,14 +3,16 @@ import time
 import json
 import platform
 import undetected_chromedriver as uc  # 绕过人机验证的
+import os
 
 global_driver = None
+current_dir = os.path.dirname(os.path.abspath(__file__))
+print(os.path.join(current_dir,'..' ,'jsScript', 'getLianJiaHouseInfo.js'))
 
-
-def goToLianJiaPage(url):
+def goToLianJiaPage(houseName, url):
     global global_driver
     global_driver.get(url)
-    js_file_path = './getLianJiaHouseInfo.js'
+    js_file_path = os.path.join(current_dir,'..','jsScript', 'getLianJiaHouseInfo.js')
     # 读取 JavaScript 文件内容
     with open(js_file_path, 'r', encoding='utf-8') as file:
         js_content = file.read()
@@ -30,9 +32,6 @@ def goToLianJiaPage(url):
     print("execute_script")
 
 
-global_driver = None
-
-
 def initSpider():
     print("main:")
     # options = Options()
@@ -43,18 +42,18 @@ def initSpider():
     # 使用profile，获取已有的登录信息
     if system == 'Darwin':
         print("当前系统是 macOS")
-        options.add_argument( r'--user-data-dir="/Users/panfeng/Library/Application Support/Google/Chrome"')
+        options.add_argument(r'--user-data-dir=/Users/panfeng/Library/Application Support/Google/Chrome')
     elif system == 'Windows':
         print("当前系统是 Windows")
-        options.add_argument( r'--user-data-dir="C:\Users\59546\AppData\Local\Google\Chrome\User Data"')
+        options.add_argument(r"--user-data-dir=C:\Users\59546\AppData\Local\Google\Chrome\User Data")
     else:
         print("其他操作系统")
     # 指向你想用的配置文件夹（比如 Default、Profile 1）
     options.add_argument("--profile-directory=Default")
-    # options.headless = False
-    # options.add_argument("--no-sandbox")
-    # options.add_argument("--disable-dev-shm-usage")
-    # options.add_argument("--disable-blink-features=AutomationControlled")
+    options.headless = False
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
 
     # 启动浏览器
     global global_driver
@@ -71,6 +70,7 @@ def initSpider():
     # tabs = driver.window_handles
     # driver.switch_to.window(tabs[1])
     print('initSpider ok')
+    runSpider()
     try:
         while True:
             time.sleep(5)
@@ -78,3 +78,13 @@ def initSpider():
     except Exception as e:
         print(f"[!] 退出")
         global_driver.quit()
+
+
+def runSpider():
+    goToLianJiaPage("蜀南春郡", "https://cd.lianjia.com/chengjiao/rs%E8%9C%80%E5%8D%97%E6%98%A5%E9%83%A1/")
+    # houseArray = {
+    #     "蜀南春郡": "https://cd.lianjia.com/chengjiao/rs%E8%9C%80%E5%8D%97%E6%98%A5%E9%83%A1/",
+    #     "凯莱丽景": "https://cd.lianjia.com/chengjiao/rs%E5%87%AF%E8%8E%B1%E4%B8%BD%E6%99%AF/",
+    # }
+    # for key, value in houseArray.items():
+    #     goToLianJiaPage( "蜀南春郡","https://cd.lianjia.com/chengjiao/rs%E8%9C%80%E5%8D%97%E6%98%A5%E9%83%A1/")

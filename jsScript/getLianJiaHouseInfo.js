@@ -1,6 +1,6 @@
 // 获取所有的 <li> 节点
 const listItems = document.querySelectorAll('.listContent > li');
-
+const houseDatas = []
 // 遍历每个 <li> 节点
 listItems.forEach((listItem) => {
     // 获取楼盘名字
@@ -29,25 +29,20 @@ listItems.forEach((listItem) => {
     const listingPriceText = dealCycleTxtElement ? dealCycleTxtElement.textContent.match(/挂牌(\d+)万/) : null;
     const listingPrice = listingPriceText ? parseFloat(listingPriceText[1]) : null;
 
-    // 输出结果
-    console.log('楼盘名字:', estateName);
-    console.log('面积:', area);
-    console.log('交易时间:', dealDate);
-    console.log('交易价格:', totalPrice);
-    console.log('是否精装:', isRefurbished);
-    console.log('挂牌价:', listingPrice);
-    console.log('----------------------');
+    houseDatas.push({
+        "楼盘名字": estateName,
+        "面积": area,
+        "交易时间": dealDate,
+        "交易价格": totalPrice,
+        "是否精装": isRefurbished,
+        "挂牌价": listingPrice,
+    })
+
 });
 
-let data = {
-    address: "xx",
-    info: {
-        '楼盘名字:': "_", '面积:': "_", '交易时间:': "_", '交易价格:': "_", '是否精装:': "_", '挂牌价:': "_",
-    }
-}
 
-function postData() {
-    const data = {
+function postData(houseDatas) {
+    /*const data = {
         "address": "abc", "info": {
             "楼盘名字": "示例楼盘",
             "面积": "100平",
@@ -56,7 +51,13 @@ function postData() {
             "是否精装": "是",
             "挂牌价": "120万"
         }
+    };*/
+    console.log("postData:", postData)
+    //houseName是python注入的
+    const data = {
+        "address": "蜀南春郡", "info": houseDatas
     };
+
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:5000/post_data', true);
@@ -74,6 +75,8 @@ function postData() {
 
     xhr.send(JSON.stringify(data));
 }
+
+postData(houseDatas);
 
 function nextUrl() {
     const data = {
@@ -97,8 +100,4 @@ function nextUrl() {
     xhr.send(JSON.stringify(data));
 }
 
-postData();
-
-setTimeout(() => {
-    nextUrl()
-}, 1000)
+//nextUrl()
