@@ -41,7 +41,7 @@ listItems.forEach((listItem) => {
 });
 
 
-function postData(houseDatas) {
+function postData() {
     /*const data = {
         "address": "abc", "info": {
             "楼盘名字": "示例楼盘",
@@ -52,11 +52,12 @@ function postData(houseDatas) {
             "挂牌价": "120万"
         }
     };*/
-    console.log("postData:", postData)
+
     //houseName是python注入的
     const data = {
-        "address": "蜀南春郡", "info": houseDatas
+        "address": houseName, "info": houseDatas
     };
+    console.log("data:", data)
 
 
     const xhr = new XMLHttpRequest();
@@ -71,12 +72,13 @@ function postData(houseDatas) {
                 console.error('数据发送失败，状态码：', xhr.status);
             }
         }
+        window.close();
     };
 
     xhr.send(JSON.stringify(data));
 }
 
-postData(houseDatas);
+postData();
 
 function nextUrl() {
     const data = {

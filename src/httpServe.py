@@ -3,8 +3,9 @@ from flask import Flask, request
 import csv
 import threading
 from flask_cors import CORS
-from .spider import goToLianJiaPage
+from .spider import goToLianJiaPage, nextRun
 import os
+
 app = Flask(__name__)
 # 允许所有源的请求
 CORS(app)
@@ -19,6 +20,7 @@ def post_data():
     address = data['address']
     info_list = data['info']  # 假设是一个字典数组
     if not isinstance(info_list, list) or not all(isinstance(item, dict) for item in info_list):
+        nextRun()
         return 'Invalid info format', 400
 
     csv_file = f'{address}.csv'
@@ -36,6 +38,7 @@ def post_data():
         for info in info_list:
             writer.writerow(info)
 
+    nextRun()
     return 'Data saved successfully', 200
 
 
@@ -47,6 +50,8 @@ def nextUrl():
         return 'Invalid data', 400
     newUrl = data['url']
     goToLianJiaPage(newUrl)
+
+
 
 
 def run_flask_app():

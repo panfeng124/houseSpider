@@ -7,19 +7,31 @@ import os
 
 global_driver = None
 current_dir = os.path.dirname(os.path.abspath(__file__))
-print(os.path.join(current_dir,'..' ,'jsScript', 'getLianJiaHouseInfo.js'))
+print(os.path.join(current_dir, '..', 'jsScript', 'getLianJiaHouseInfo.js'))
+
+houseArray = {
+    "蜀南春郡": "https://cd.lianjia.com/chengjiao/rs%E8%9C%80%E5%8D%97%E6%98%A5%E9%83%A1/",
+    "凯莱丽景": "https://cd.lianjia.com/chengjiao/rs%E5%87%AF%E8%8E%B1%E4%B8%BD%E6%99%AF/",
+}
+houseList = list(houseArray.items())
+currentIndex = 0
+haveDone = False
+
 
 def goToLianJiaPage(houseName, url):
     global global_driver
     global_driver.get(url)
-    js_file_path = os.path.join(current_dir,'..','jsScript', 'getLianJiaHouseInfo.js')
+    js_file_path = os.path.join(current_dir, '..', 'jsScript', 'getLianJiaHouseInfo.js')
     # 读取 JavaScript 文件内容
     with open(js_file_path, 'r', encoding='utf-8') as file:
         js_content = file.read()
 
-    # 使用 JSON 编码确保内容被正确转义
-    escaped_js_content = json.dumps(js_content)  # 输出带双引号的合法 JS 字符串
+    # houseName="蜀南春郡"
+    # 在最前面加上变量定义，让整个 JS 文件能用到它
+    injected_js = f'let houseName = "{houseName}";\n' + js_content
 
+    # 使用 JSON 编码确保内容被正确转义
+    escaped_js_content = json.dumps(injected_js)  # 输出带双引号的合法 JS 字符串
     # 植入的 JS 代码
     custom_js = f"""
     const script = document.createElement('script');
@@ -70,9 +82,10 @@ def initSpider():
     # tabs = driver.window_handles
     # driver.switch_to.window(tabs[1])
     print('initSpider ok')
-    runSpider()
+    nextRun()
+    global haveDone
     try:
-        while True:
+        while not haveDone:
             time.sleep(5)
             global_driver.title  # 触发一次访问，判断浏览器是否还连着
     except Exception as e:
@@ -80,11 +93,17 @@ def initSpider():
         global_driver.quit()
 
 
-def runSpider():
-    goToLianJiaPage("蜀南春郡", "https://cd.lianjia.com/chengjiao/rs%E8%9C%80%E5%8D%97%E6%98%A5%E9%83%A1/")
-    # houseArray = {
-    #     "蜀南春郡": "https://cd.lianjia.com/chengjiao/rs%E8%9C%80%E5%8D%97%E6%98%A5%E9%83%A1/",
-    #     "凯莱丽景": "https://cd.lianjia.com/chengjiao/rs%E5%87%AF%E8%8E%B1%E4%B8%BD%E6%99%AF/",
-    # }
-    # for key, value in houseArray.items():
-    #     goToLianJiaPage( "蜀南春郡","https://cd.lianjia.com/chengjiao/rs%E8%9C%80%E5%8D%97%E6%98%A5%E9%83%A1/")
+def nextRun():
+    global haveDone
+    global currentIndex
+    global houseList
+    # goToLianJiaPage("蜀南春郡", "https://cd.lianjia.com/chengjiao/rs%E8%9C%80%E5%8D%97%E6%98%A5%E9%83%A1/")
+
+    if currentIndex < len(houseList):
+        key, value = houseList[currentIndex]
+        print(key,value)
+        goToLianJiaPage(key, value)
+        currentIndex += 1
+    else:
+        currentIndex = 0
+        haveDone = True
