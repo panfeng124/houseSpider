@@ -19,7 +19,7 @@ def post_data():
         return 'Invalid data', 400
 
     address = data['address']
-    csv_file = f'{address}.csv'
+    csv_file = f'houseInfo/{address}.csv'
     info_list = data['info']
     new_df = pd.DataFrame(info_list)
 
