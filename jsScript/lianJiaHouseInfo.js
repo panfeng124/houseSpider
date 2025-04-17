@@ -57,11 +57,20 @@ function postData() {
     const data = {
         "address": houseName, "info": houseDatas
     };
+    if (isInit) {
+        const pagesButton = document.querySelectorAll('.page-box.house-lst-page-box > a');
+        let pages = pagesButton.length > 4 ? 4 : pagesButton.length
+        console.log(pageNum, pages, pagesButton.length)
+        if (pageNum <= 4 && pages > pageNum) {
+            data.nextPage = pageNum + 1;
+        }
+
+    }
     console.log("data:", data)
 
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:5000/post_data', true);
+    xhr.open('POST', 'http://127.0.0.1:5000/add_data', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {
@@ -72,34 +81,11 @@ function postData() {
                 console.error('数据发送失败，状态码：', xhr.status);
             }
         }
-        window.close();
     };
 
     xhr.send(JSON.stringify(data));
 }
 
 postData();
-
-function nextUrl() {
-    const data = {
-        "url": "https://segmentfault.com/channel/frontend",
-    };
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:5000/nextUrl', true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                console.log('数据发送成功：', xhr.responseText);
-            } else {
-                console.error('数据发送失败，状态码：', xhr.status);
-            }
-        }
-    };
-
-    xhr.send(JSON.stringify(data));
-}
 
 //nextUrl()

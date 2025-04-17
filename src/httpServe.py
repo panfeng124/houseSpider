@@ -5,53 +5,64 @@ import threading
 from flask_cors import CORS
 from .spider import goToLianJiaPage, nextRun
 import os
+import pandas as pd
 
 app = Flask(__name__)
 # 允许所有源的请求
 CORS(app)
 
 
-@app.route('/post_data', methods=['POST'])
+@app.route('/add_data', methods=['POST'])
 def post_data():
     data = request.get_json()
     if not data or 'address' not in data or 'info' not in data:
         return 'Invalid data', 400
 
     address = data['address']
-    info_list = data['info']  # 假设是一个字典数组
-    if not isinstance(info_list, list) or not all(isinstance(item, dict) for item in info_list):
-        nextRun()
-        return 'Invalid info format', 400
-
     csv_file = f'{address}.csv'
+    info_list = data['info']
+    new_df = pd.DataFrame(info_list)
 
-    # 如果文件不存在，创建并写入表头
-    file_exists = os.path.exists(csv_file)
-    with open(csv_file, 'a', newline='', encoding='utf-8') as file:
-        # 用第一个字典的 key 作为表头
-        fieldnames = info_list[0].keys()
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+    # print(data)
 
-        if not file_exists:
-            writer.writeheader()
+    required_keys = ["面积", "交易时间", "交易价格"]
 
-        for info in info_list:
-            writer.writerow(info)
+    # 如果文件不存在，直接写入所有数据
+    if not os.path.exists(csv_file):
+        new_df.to_csv(csv_file, mode='w', index=False, header=True, encoding='utf-8')
+    else:
+        try:
+            existing_df = pd.read_csv(csv_file)
+        except Exception as e:
+            existing_df = pd.DataFrame(columns=new_df.columns)
 
-    nextRun()
-    return 'Data saved successfully', 200
+        # 计算实际存在的去重字段（可能部分字段缺失）
+        actual_keys = [col for col in required_keys if col in new_df.columns and col in existing_df.columns]
 
+        if not actual_keys:
+            # 无可用于去重的字段，直接插入所有
+            new_only_df = new_df
+        else:
+            # 确保字段类型一致（转换为字符串）
+            for col in actual_keys:
+                new_df[col] = new_df[col].astype(str)
+                existing_df[col] = existing_df[col].astype(str)
 
-# js发起请求，让python翻页，并注入js
-@app.route('/nextUrl', methods=['POST'])
-def nextUrl():
-    data = request.get_json()
-    if not data:
-        return 'Invalid data', 400
-    newUrl = data['url']
-    goToLianJiaPage(newUrl)
+            try:
+                merged_df = pd.merge(new_df, existing_df, on=actual_keys, how="left", indicator=True)
+                new_only_df = merged_df[merged_df["_merge"] == "left_only"]
+                new_only_df = new_only_df[new_df.columns]
+            except Exception as e:
+                new_only_df = new_df  # merge失败也别中断，直接全部插入
 
+        if not new_only_df.empty:
+            new_only_df.to_csv(csv_file, mode='a', index=False, header=False, encoding='utf-8')
 
+    if "nextPage" in data:
+        goToLianJiaPage(address, data['nextPage'], True)
+    else:
+        nextRun()
+    return '', 200
 
 
 def run_flask_app():
