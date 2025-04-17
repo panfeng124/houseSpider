@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECharts 楼盘价格走势</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <style>
+        #toggleButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000000;
+            padding: 5px 10px;
+            background: red;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #toggleButton:hover {
+            background: #f0f0f0;
+        }
+
+        #main {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+<div id="main" style="width: 100%; height: 100vh;">
+</div>
+<script>
+    let chart; // 将chart定义为全局变量，以便按钮可以访问
+    let allHidden = false; // 跟踪当前状态
+
+    fetch('resultData.json')
+        .then(response => response.json())
+        .then(rawData => {
+
+            const processedData = completeMissingPrices(rawData);
+
+            // 获取所有楼盘名字和时间点（用于x轴）
+            const series = [];
+            for (const [name, item] of Object.entries(processedData)) {
+                series.push({
+                    name: name,
+                    type: 'line',
+                    stack: 'Total',
+                    data: linearInterpolateArray(item.每平方米价格), // ECharts需要[x, y]格式的数据
+                    connectNulls: true
+                    // smooth: true
+                });
+            }
+
+            // 初始化ECharts实例
+            chart = echarts.init(document.getElementById('main'));
+
+            const legendSelected = {};
+            Object.keys(processedData).forEach(key => {
+                legendSelected[key] = false;
+            });
+            // 配置图表选项
+            const option = {
+                title: {
+                    text: '楼盘每平方米价格走势'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                },
+                legend: {
+                    data: Object.keys(processedData),
+                    selected: legendSelected
+                },
+                xAxis: {
+                    type: 'category',
+                    data: rawData["南湖国际社区"].交易时间
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: series
+            };
+
+            // 使用配置项生成图表
+            chart.setOption(option);
+
+        });
+
+
+    function completeMissingPrices(originalData) {
+        // 1. 收集所有时间点
+        const allDates = new Set();
+
+        // 遍历所有小区，收集所有时间点
+        Object.values(originalData).forEach(community => {
+            community.交易时间.forEach(date => allDates.add(date));
+        });
+
+        // 转换为排序后的数组
+        const sortedDates = Array.from(allDates).sort();
+
+        // 2. 对每个小区，补全缺失的时间点
+        const processedData = {};
+
+        Object.entries(originalData).forEach(([communityName, communityData]) => {
+            const existingDates = communityData.交易时间;
+            const existingPrices = communityData.每平方米价格;
+
+            // 创建新的时间-价格映射
+            const dateToPrice = {};
+            existingDates.forEach((date, index) => {
+                dateToPrice[date] = existingPrices[index];
+            });
+
+            // 补全所有时间点
+            const completeDates = [];
+            const completePrices = [];
+
+            sortedDates.forEach(date => {
+                completeDates.push(date);
+                completePrices.push(dateToPrice[date] ?? null); // 如果没有价格，用 null 填充
+            });
+
+            // 更新处理后的数据
+            processedData[communityName] = {
+                交易时间: completeDates,
+                每平方米价格: completePrices,
+            };
+        });
+
+        return processedData;
+    }
+
+    /**
+     * 线性插值填充数组中的 null 值
+     * @param {Array} arr - 包含 null 和数字的数组
+     * @returns {Array} - 填充后的新数组
+     */
+    function linearInterpolateArray(arr) {
+        const result = [...arr];
+
+        // 收集所有非 null 的索引和值（原值保留不处理）
+        const validPoints = [];
+        for (let i = 0; i < result.length; i++) {
+            if (result[i] !== null) {
+                validPoints.push({
+                    index: i,
+                    value: parseFloat(result[i].toFixed(1))
+                });
+            }
+        }
+
+        if (validPoints.length < 2) return result;
+
+        for (let i = 0; i < validPoints.length - 1; i++) {
+            const start = validPoints[i];
+            const end = validPoints[i + 1];
+            const gap = end.index - start.index;
+
+            if (gap > 1) {
+                for (let j = start.index + 1; j < end.index; j++) {
+                    const ratio = (j - start.index) / gap;
+                    const interpolatedValue = start.value + (end.value - start.value) * ratio;
+                    // 关键修改：插值结果保留1位小数
+                    result[j] = parseFloat(interpolatedValue.toFixed(1));
+                }
+            }
+        }
+
+        return result;
+    }
+
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
 import platform
+import json
 
 # 设置中文显示
 import matplotlib
@@ -84,10 +85,19 @@ df['交易时间'] = pd.to_datetime(df['交易时间'], format='%Y.%m.%d')  # �
 # 过滤掉2023年之前的记录
 df = df[df['交易时间'] >= pd.to_datetime('2023-01-01')]
 
-# 保存为 JSON 文件
 # 格式化交易时间为字符串（如：YYYY-MM-DD）
 df['交易时间'] = df['交易时间'].dt.strftime('%Y-%m-%d')
-df.to_json('filtered_data.json', orient='records', force_ascii=False)
+
+# 按楼盘名字分组，并收集交易时间和每平方米价格
+result = {}
+for name, group in df.groupby('楼盘名字'):
+    result[name] = {
+        '交易时间': group['交易时间'].tolist(),
+        '每平方米价格': group['每平方米价格'].tolist()
+    }
+
+with open('resultData.json', 'w', encoding='utf-8') as f:
+    json.dump(result, f, ensure_ascii=False, indent=4)
 
 exit()
 
@@ -117,3 +127,6 @@ plt.xticks(rotation=45)  # 旋转x轴标签
 # 显示图形
 plt.tight_layout()
 plt.savefig("result/xxx.png")  # 保存图像为文件
+
+
+
