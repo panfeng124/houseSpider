@@ -5,3 +5,4 @@ spider/*
 *.csv
 chromeInfo/*
 result/*
+*.json

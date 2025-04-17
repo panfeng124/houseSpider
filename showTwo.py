@@ -84,6 +84,13 @@ df['交易时间'] = pd.to_datetime(df['交易时间'], format='%Y.%m.%d')  # �
 # 过滤掉2023年之前的记录
 df = df[df['交易时间'] >= pd.to_datetime('2023-01-01')]
 
+# 保存为 JSON 文件
+# 格式化交易时间为字符串（如：YYYY-MM-DD）
+df['交易时间'] = df['交易时间'].dt.strftime('%Y-%m-%d')
+df.to_json('filtered_data.json', orient='records', force_ascii=False)
+
+exit()
+
 # 按楼盘名字绘制每平方米价格趋势
 plt.figure(figsize=(12, 6))
 
