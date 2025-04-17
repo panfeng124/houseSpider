@@ -32,13 +32,20 @@ def load_data_from_folder(folder_path):
     all_files = glob.glob(os.path.join(folder_path, "*.csv"))
     df_list = []
     for file in all_files:
-        df = pd.read_csv(file)
+        try:
+            df = pd.read_csv(file)
 
-        # 只将非空的 DataFrame 加入列表
-        if not df.empty:
+            # 如果 DataFrame 为空，跳过
+            if df.empty:
+                print(f"警告: 文件 {file} 是空的，已跳过")
+                continue
+
             df_list.append(df)
-        else:
-            print(f"警告: 文件 {file} 是空的，已跳过")
+
+        except pd.errors.EmptyDataError:
+            print(f"警告: 文件 {file} 没有有效数据，已跳过")
+        except Exception as e:
+            print(f"警告: 读取文件 {file} 时发生错误: {e}")
 
     # 如果 df_list 为空，返回一个空的 DataFrame
     if df_list:
@@ -46,7 +53,6 @@ def load_data_from_folder(folder_path):
     else:
         print("警告: 没有有效的数据文件，返回空的 DataFrame")
         return pd.DataFrame()  # 返回一个空的 DataFrame
-
 
 # 加载数据
 folder_path = './houseInfo'  # 数据所在文件夹路径
