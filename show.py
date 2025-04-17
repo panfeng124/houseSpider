@@ -57,7 +57,7 @@ plt.savefig("result/price_vs_area.png")  # 保存图像为文件
 
 
 # 3. 精装与非精装房的价格差异
-plt.figure(figsize=(8, 6))
+plt.figure(figsize=(32, 16))
 sns.boxplot(data=data, x='是否精装', y='交易价格')
 plt.title('精装与非精装房的价格差异')
 plt.xlabel('是否精装')

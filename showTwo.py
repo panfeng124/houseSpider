@@ -16,13 +16,25 @@ import glob
 
 
 # 定义读取文件夹中的所有csv文件
+
 def load_data_from_folder(folder_path):
     all_files = glob.glob(os.path.join(folder_path, "*.csv"))
     df_list = []
     for file in all_files:
         df = pd.read_csv(file)
-        df_list.append(df)
-    return pd.concat(df_list, ignore_index=True)
+
+        # 只将非空的 DataFrame 加入列表
+        if not df.empty:
+            df_list.append(df)
+        else:
+            print(f"警告: 文件 {file} 是空的，已跳过")
+
+    # 如果 df_list 为空，返回一个空的 DataFrame
+    if df_list:
+        return pd.concat(df_list, ignore_index=True)
+    else:
+        print("警告: 没有有效的数据文件，返回空的 DataFrame")
+        return pd.DataFrame()  # 返回一个空的 DataFrame
 
 
 # 加载数据
