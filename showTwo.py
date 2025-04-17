@@ -2,21 +2,32 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
+import platform
 
 # 设置中文显示
 import matplotlib
-
-matplotlib.rcParams['font.sans-serif'] = ['Hiragino Sans GB']  # 使用Hiragino Sans GB
-# matplotlib.rcParams['font.sans-serif'] = ['AppleGothic']   # 或者使用 AppleGothic
-matplotlib.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+system = platform.system()
+if system == 'Darwin':
+    print("当前系统是 macOS")
+    matplotlib.rcParams['font.sans-serif'] = ['Hiragino Sans GB']  # 使用Hiragino Sans GB
+    # matplotlib.rcParams['font.sans-serif'] = ['AppleGothic']   # 或者使用 AppleGothic
+    matplotlib.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+elif system == 'Windows':
+    print("当前系统是 Windows")
+    matplotlib.rcParams['font.sans-serif'] = ['Microsoft YaHei']  # 使用Hiragino Sans GB
+    # matplotlib.rcParams['font.sans-serif'] = ['AppleGothic']   # 或者使用 AppleGothic
+    matplotlib.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+else:
+    print("其他操作系统")
 
 # 读取所有 CSV 文件
 import os
 import glob
 
 
-# 定义读取文件夹中的所有csv文件
 
+
+# 定义读取文件夹中的所有csv文件
 def load_data_from_folder(folder_path):
     all_files = glob.glob(os.path.join(folder_path, "*.csv"))
     df_list = []
